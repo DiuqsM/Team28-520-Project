@@ -1,0 +1,60 @@
+erDiagram
+  USER {
+    uuid id PK
+    string google_sub UK
+    string email
+    string name
+    string profile_photo_url
+    string college
+    string role
+    boolean is_suspended
+    timestamp created_at
+  }
+
+  EVENT {
+    uuid id PK
+    uuid created_by FK
+    string source
+    string title
+    text description
+    string location
+    string college
+    decimal price
+    int age_limit
+    int capacity
+    int registration_count
+    string status
+    timestamp starts_at
+    timestamp ends_at
+    timestamp created_at
+  }
+
+  REGISTRATION {
+    uuid id PK
+    uuid user_id FK
+    uuid event_id FK
+    timestamp registered_at
+  }
+
+  EVENT_CHAT_MESSAGE {
+    uuid id PK
+    uuid event_id FK
+    uuid sender_id FK
+    text content
+    timestamp sent_at
+  }
+
+  SCRAPE_LOG {
+    uuid id PK
+    string source_url
+    string status
+    int events_added
+    text error_message
+    timestamp scraped_at
+  }
+
+  USER ||--o{ EVENT : "creates"
+  USER ||--o{ REGISTRATION : "registers"
+  EVENT ||--o{ REGISTRATION : "has"
+  EVENT ||--o{ EVENT_CHAT_MESSAGE : "has"
+  USER ||--o{ EVENT_CHAT_MESSAGE : "sends"
