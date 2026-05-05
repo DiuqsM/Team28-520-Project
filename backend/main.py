@@ -27,7 +27,7 @@ def get_events(
     keyword: Optional[str] = None,
     location: Optional[str] = None,
     max_price: Optional[float] = None,
-    min_age: Optional[int] = None,
+    user_age: Optional[int] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None
 ):
@@ -44,13 +44,14 @@ def get_events(
             query = query.eq("location", location)
 
         if max_price is not None:
-            # .lte() = less than equal to
-            query = query.lte("price", max_price)
+            # NULL is considered free
+            query = query.or_(f"price.lte.{max_price},price.is.null")
 
-        # if the age limit is LESS than an age
-        # e.g. events for 21+ not shown if min_age set to 18
-        if min_age is not None:
-            query = query.lte("age_limit", min_age)
+        # if the age limit is LESS than or equal to the user age
+        # e.g. events for 21+ not shown if user_age set to 18
+        if user_age is not None:
+            # NULL is considered no age restriction / 0+
+            query = query.or_(f"age_limit.lte.{user_age},age_limit.is.null")
 
         # event happens on or after start date
         if start_date:
@@ -80,6 +81,7 @@ def get_users(
         if id:
             query = query.eq("id", id)
 
+        # search username, first name, and last name for keyword
         if name:
             search_term = f"%{name}%"
             query = query.or_(f"username.ilike.{search_term},first_namee.ilike.{search_term},last_name.ilike.{search_term}")
