@@ -68,3 +68,48 @@ def get_events(
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/users")
+def get_users(
+    id: Optional[str] = None,
+    name = None
+):
+    try:
+        query = supabase.table('users').select("*")
+
+        if id:
+            query = query.eq("id", id)
+
+        if name:
+            search_term = f"%{name}%"
+            query = query.or_(f"username.ilike.{search_term},first_namee.ilike.{search_term},last_name.ilike.{search_term}")
+
+        response = query.execute()
+        return {"data": response.data}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/registrations")
+def get_registrations(
+    id: Optional[str] = None,
+    user_id: Optional[str] = None,
+    event_id: Optional[str] = None
+):
+    try:
+        query = supabase.table('registration').select("*")
+
+        if id:
+            query = query.eq("id", id)
+
+        if user_id:
+            query = query.eq("user_id", user_id)
+
+        if event_id:
+            query = query.eq("event_id", event_id)
+
+        response = query.execute()
+        return {"data": response.data}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
