@@ -2,11 +2,18 @@ package com.example.happnin
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Query
 
-// endpoints
 interface ApiService {
     @GET("events")
-    suspend fun getEvents(): EventResponse
+    suspend fun getEvents(
+        @Query("keyword") keyword: String? = null,
+        @Query("location") location: String? = null,
+        @Query("max_price") maxPrice: Float? = null,
+        @Query("min_age") minAge: Int? = null,
+        @Query("start_date") startDate: String? = null,
+        @Query("end_date") endDate: String? = null
+    ): EventResponse
 }
 
 object ApiClient {
