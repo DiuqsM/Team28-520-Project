@@ -14,6 +14,19 @@ interface ApiService {
         @Query("start_date") startDate: String? = null,
         @Query("end_date") endDate: String? = null
     ): EventResponse
+
+    @GET("users")
+    suspend fun getUsers(
+        @Query("id") id: String? = null,
+        @Query("name") name: String? = null
+    ): UserResponse
+
+    @GET("registrations")
+    suspend fun getRegistrations(
+        @Query("id") id: String? = null,
+        @Query("user_id") userId: String? = null,
+        @Query("event_id") eventId: String? = null
+    ): RegistrationResponse
 }
 
 object ApiClient {
