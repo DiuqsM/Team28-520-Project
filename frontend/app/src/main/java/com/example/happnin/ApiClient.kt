@@ -10,7 +10,7 @@ interface ApiService {
         @Query("keyword") keyword: String? = null,
         @Query("location") location: String? = null,
         @Query("max_price") maxPrice: Float? = null,
-        @Query("min_age") minAge: Int? = null,
+        @Query("user_age") userAge: Int? = null,
         @Query("start_date") startDate: String? = null,
         @Query("end_date") endDate: String? = null
     ): EventResponse
