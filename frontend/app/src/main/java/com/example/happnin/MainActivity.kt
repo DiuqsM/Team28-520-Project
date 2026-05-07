@@ -142,13 +142,6 @@ private fun HappnInBottomBar(
             )
         }
     }
-
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = displayText)
-    }
 }
 
 @Composable
