@@ -1,6 +1,9 @@
 # Compiled class file
 *.class
 
+# claude file
+CLAUDE.md
+
 # Log file
 *.log
 
@@ -9,6 +12,9 @@
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
+
+# vscode configs
+.vscode
 
 # Package Files #
 *.jar
