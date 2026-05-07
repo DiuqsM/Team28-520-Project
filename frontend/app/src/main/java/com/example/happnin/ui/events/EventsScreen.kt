@@ -45,6 +45,9 @@ fun EventsScreen(
     events: List<Event>,
     modifier: Modifier = Modifier,
     onEventClick: (Event) -> Unit = {},
+    // Registration flow — wired from RegistrationViewModel in MainActivity
+    registeredEventIds: Set<String> = emptySet(),
+    onRegisterClick: (Event) -> Unit = {},
 ) {
     var isSearchOpen by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -115,7 +118,9 @@ fun EventsScreen(
                 ) { event ->
                     EventCard(
                         event = event,
+                        isRegistered = registeredEventIds.contains(event.id),
                         onSeeMoreClick = { onEventClick(event) },
+                        onRegisterClick = { onRegisterClick(event) },
                     )
                 }
             }

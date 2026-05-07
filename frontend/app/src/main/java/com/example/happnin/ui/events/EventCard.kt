@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.example.happnin.data.Event
 import com.example.happnin.data.EventStatus
 import com.example.happnin.data.FakeEventRepository
+import com.example.happnin.ui.registration.RegistrationButton
 import com.example.happnin.ui.theme.HappnInDark
 import com.example.happnin.ui.theme.HappnInPurple
 import com.example.happnin.ui.theme.HappnInTheme
@@ -41,6 +42,7 @@ import kotlinx.datetime.LocalDateTime
 fun EventCard(
     event: Event,
     modifier: Modifier = Modifier,
+    isRegistered: Boolean = false,  // wired from RegistrationViewModel in MainActivity
     onSeeMoreClick: () -> Unit = {},
     onRegisterClick: () -> Unit = {},
 ) {
@@ -88,11 +90,15 @@ fun EventCard(
                 onClick = onSeeMoreClick,
             )
             Spacer(modifier = Modifier.width(10.dp))
-            EventActionButton(
-                text = if (event.status == EventStatus.OPEN) "Register" else event.status.label,
-                color = if (event.status == EventStatus.OPEN) HappnInPurple else HappnInDark,
-                onClick = onRegisterClick,
-            )
+            // Registration flow hook — RegistrationButton handles Register ↔ Registered toggle
+            when {
+                isRegistered ->
+                    RegistrationButton(isRegistered = true, onRegisterClick = {})
+                event.status == EventStatus.OPEN ->
+                    RegistrationButton(isRegistered = false, onRegisterClick = onRegisterClick)
+                else ->
+                    EventActionButton(text = event.status.label, color = HappnInDark, onClick = {})
+            }
             Spacer(modifier = Modifier.width(10.dp))
             AvatarGroup(
                 count = event.registrationCount,
