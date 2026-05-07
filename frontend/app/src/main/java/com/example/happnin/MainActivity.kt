@@ -1,6 +1,7 @@
 package com.example.happnin
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -140,6 +141,23 @@ private fun HappnInBottomBar(
                 onClick = { onDestinationClick(destination) },
             )
         }
+    }
+
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = displayText)
+    }
+}
+
+@Composable
+fun PlaceholderScreen(title: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "$title Screen Coming Soon!")
     }
 }
 
