@@ -19,9 +19,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -58,6 +60,7 @@ fun MyProfileScreen(
     onAddFriendsClick: () -> Unit = {},   // TODO: Ava - wire Add Friends screen
     onSettingsClick: () -> Unit = {},     // TODO: implement Settings screen
     onEventClick: (Event) -> Unit = {},   // TODO: Sami - wire Event Detail screen
+    onLogOut: () -> Unit = {},
 ) {
     val profileState by profileViewModel.uiState.collectAsState()
     val registeredIds by registrationViewModel.registeredEventIds.collectAsState()
@@ -134,6 +137,20 @@ fun MyProfileScreen(
             ) {
                 ProfileActionButton("Create Event", HappnInPurple, Modifier.weight(1f), onCreateEventClick)
                 ProfileActionButton("Add Friends", HappnInDark, Modifier.weight(1f), onAddFriendsClick)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onLogOut,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(44.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+            ) {
+                Text("Log Out", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
             }
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))

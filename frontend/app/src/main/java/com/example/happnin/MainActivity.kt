@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.happnin.data.FakeEventRepository
 import com.example.happnin.ui.auth.LoginScreen
+import com.example.happnin.ui.auth.SignUpScreen
 import com.example.happnin.ui.events.EventsScreen
 import com.example.happnin.ui.myevents.MyEventsScreen
 import com.example.happnin.ui.profile.MyProfileScreen
@@ -61,6 +62,7 @@ class MainActivity : ComponentActivity() {
 fun HappnInApp() {
     // ── Auth gate ────────────────────────────────────────────────────────────────
     // TODO: Ava/Srijan - replace with a real Supabase session check
+    var authScreen by rememberSaveable { mutableStateOf(AuthScreen.LOGIN) }
     var isLoggedIn by rememberSaveable { mutableStateOf(false) }
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
 
@@ -72,15 +74,22 @@ fun HappnInApp() {
     val events = remember { FakeEventRepository.events }
 
     if (!isLoggedIn) {
-        // Login screen — no bottom nav
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.White,
         ) { padding ->
-            LoginScreen(
-                onLoginSuccess = { isLoggedIn = true },
-                modifier = Modifier.padding(padding),
-            )
+            when (authScreen) {
+                AuthScreen.LOGIN -> LoginScreen(
+                    onLoginSuccess = { isLoggedIn = true },
+                    onSignUpClick = { authScreen = AuthScreen.SIGN_UP },
+                    modifier = Modifier.padding(padding),
+                )
+                AuthScreen.SIGN_UP -> SignUpScreen(
+                    onSignUpSuccess = { isLoggedIn = true },
+                    onLoginClick = { authScreen = AuthScreen.LOGIN },
+                    modifier = Modifier.padding(padding),
+                )
+            }
         }
     } else {
         Scaffold(
@@ -107,11 +116,17 @@ fun HappnInApp() {
                 AppDestinations.PROFILE -> MyProfileScreen(
                     registrationViewModel = registrationViewModel,
                     modifier = Modifier.padding(innerPadding),
+                    onLogOut = {
+                        isLoggedIn = false
+                        authScreen = AuthScreen.LOGIN
+                    },
                 )
             }
         }
     }
 }
+
+enum class AuthScreen { LOGIN, SIGN_UP }
 
 enum class AppDestinations(val label: String) {
     HOME("Explore"),
