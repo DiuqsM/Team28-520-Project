@@ -271,21 +271,6 @@ def test_get_registrations_by_user_id():
     finally:
         app.dependency_overrides.clear()
 
-def test_get_my_profile():
-    app.dependency_overrides[get_current_user] = override_get_current_user
-
-    try:
-        response = client.get("/users/me")
-
-        assert response.status_code == 200
-        json_data = response.json()
-
-        assert "Welcome to your private data!" in json_data["message"]
-        assert json_data["user_id"] == mock_test_user.id
-        assert "profile" in json_data
-    finally:
-        app.dependency_overrides.clear()
-
 def test_create_registration():
     app.dependency_overrides[get_current_user] = override_get_current_user
     fake_event_id = str(uuid.uuid4())
@@ -357,6 +342,21 @@ def test_delete_registration_unauthorized():
         assert response.status_code == 403
         assert "Not authorized" in response.json()["detail"]
 
+    finally:
+        app.dependency_overrides.clear()
+
+def test_get_my_profile():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    try:
+        response = client.get("/users/me")
+
+        assert response.status_code == 200
+        json_data = response.json()
+
+        assert "Welcome to your private data!" in json_data["message"]
+        assert json_data["user_id"] == mock_test_user.id
+        assert "profile" in json_data
     finally:
         app.dependency_overrides.clear()
 
