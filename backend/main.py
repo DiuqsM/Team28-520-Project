@@ -26,6 +26,9 @@ class EventUpdate(BaseModel):
     starts_at: Optional[datetime] = None
     ends_at: Optional[datetime] = None
 
+class RegistrationCreate(BaseModel):
+    event_id: str
+
 load_dotenv()
 
 app = FastAPI()
@@ -197,6 +200,45 @@ def get_registrations(
         response = query.execute()
         return {"data": response.data}
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/registrations", status_code=201)
+def create_registration(
+    registration: RegistrationCreate,
+    user = Depends(get_current_user)
+):
+    try:
+        new_reg_data = {
+            "user_id": user.id,
+            "event_id": registration.event_id
+        }
+
+        response = supabase.table("registration").insert(new_reg_data).execute()
+
+        return {"message": "Successfully registered for event", "data": response.data[0]}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/registrations/{registration_id}", status_code=204)
+def delete_registration(
+    registration_id: str,
+    user = Depends(get_current_user)
+):
+    try:
+        response = supabase.table("registration").delete()\
+            .eq("id", registration_id)\
+            .eq("user_id", user.id)\
+            .execute()
+
+        if not response.data:
+            raise HTTPException(status_code=403, detail="Not authorized to cancel this registration, or it doesn't exist.")
+
+        return None
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

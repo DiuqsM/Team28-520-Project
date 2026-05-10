@@ -286,6 +286,80 @@ def test_get_my_profile():
     finally:
         app.dependency_overrides.clear()
 
+def test_create_registration():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    fake_event_id = str(uuid.uuid4())
+
+    try:
+        supabase.table("events").insert({
+            "id": fake_event_id,
+            "title": "Reg Create Test Event",
+            "location": "Test City",
+            "starts_at": "2026-12-31T20:00:00",
+            "created_by": mock_test_user.id
+        }).execute()
+
+        response = client.post("/registrations", json={"event_id": fake_event_id})
+
+        assert response.status_code == 201
+        data = response.json()["data"]
+
+        assert data["event_id"] == fake_event_id
+        assert data["user_id"] == mock_test_user.id
+
+        new_reg_id = data["id"]
+
+    finally:
+        if 'new_reg_id' in locals():
+            supabase.table("registration").delete().eq("id", new_reg_id).execute()
+
+        supabase.table("events").delete().eq("id", fake_event_id).execute()
+        app.dependency_overrides.clear()
+
+
+def test_delete_registration():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    fake_event_id = str(uuid.uuid4())
+    fake_reg_id = str(uuid.uuid4())
+
+    try:
+        supabase.table("events").insert({
+            "id": fake_event_id,
+            "title": "Reg Delete Test Event",
+            "location": "Test City",
+            "starts_at": "2026-12-31T20:00:00",
+            "created_by": mock_test_user.id
+        }).execute()
+
+        supabase.table("registration").insert({
+            "id": fake_reg_id,
+            "user_id": mock_test_user.id,
+            "event_id": fake_event_id
+        }).execute()
+
+        response = client.delete(f"/registrations/{fake_reg_id}")
+
+        assert response.status_code == 204
+
+    finally:
+        supabase.table("registration").delete().eq("id", fake_reg_id).execute()
+        supabase.table("events").delete().eq("id", fake_event_id).execute()
+        app.dependency_overrides.clear()
+
+
+def test_delete_registration_unauthorized():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    try:
+        fake_reg_id = str(uuid.uuid4())
+        response = client.delete(f"/registrations/{fake_reg_id}")
+
+        assert response.status_code == 403
+        assert "Not authorized" in response.json()["detail"]
+
+    finally:
+        app.dependency_overrides.clear()
+
 def test_unauthenticated_access_blocked():
     app.dependency_overrides.clear()
 
