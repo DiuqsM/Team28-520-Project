@@ -199,3 +199,20 @@ def get_registrations(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# for private user info, like phone #
+@app.get("/users/me")
+def get_my_profile(user = Depends(get_current_user)):
+    # get uuid from auth state
+    user_id = user.id
+
+    response = supabase.table('users').select("*").eq("id", user_id).execute()
+
+    if not response.data:
+        raise HTTPException(status_code=404, detail="User profile not found.")
+
+    return {
+        "message": "Welcome to your private data!",
+        "user_id": user_id,
+        "profile": response.data[0] # return the actual dictionary, not a list
+    }

@@ -142,11 +142,9 @@ fun SignUpScreen(
                 .fillMaxWidth()
                 .height(50.dp),
             colors = ButtonDefaults.buttonColors(containerColor = HappnInPurple),
-            // Disable the button while loading
             enabled = signUpState !is SignUpState.Loading
         ) {
             if (signUpState is SignUpState.Loading) {
-                // Show a tiny white spinner
                 CircularProgressIndicator(
                     modifier = Modifier.padding(end = 8.dp),
                     color = MaterialTheme.colorScheme.onPrimary,

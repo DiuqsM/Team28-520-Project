@@ -24,24 +24,19 @@ class SignUpViewModel : ViewModel() {
     val signUpState: StateFlow<SignUpState> = _signUpState.asStateFlow()
 
     fun register(firstName: String, lastName: String, username: String, email: String, password: String) {
-        // 1. Basic validation
         if (firstName.isBlank() || lastName.isBlank() || username.isBlank() || email.isBlank() || password.isBlank()) {
             _signUpState.value = SignUpState.Error("All fields are required.")
             return
         }
 
-        // 2. Set state to loading
         _signUpState.value = SignUpState.Loading
 
-        // 3. Launch the network request
         viewModelScope.launch {
             try {
-                // Call Supabase to create the account
                 SupabaseNetwork.client.auth.signUpWith(Email) {
                     this.email = email
                     this.password = password
 
-                    // Store the extra fields in the user's raw_user_meta_data
                     data = buildJsonObject {
                         put("first_name", firstName)
                         put("last_name", lastName)
@@ -49,11 +44,9 @@ class SignUpViewModel : ViewModel() {
                     }
                 }
 
-                // If we reach here, it worked!
                 _signUpState.value = SignUpState.Success
 
             } catch (e: Exception) {
-                // Catches errors like "Password too short" or "Email already registered"
                 val errorMessage = e.localizedMessage ?: "An unknown error occurred"
                 _signUpState.value = SignUpState.Error(errorMessage)
             }

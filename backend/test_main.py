@@ -4,7 +4,7 @@ from dependencies import get_current_user
 import uuid
 from database import supabase
 
-# Create a fake user object that looks exactly like what Supabase returns
+# create a fake user object that looks like what Supabase returns
 class MockUser:
     def __init__(self):
         # Use a fake UUID for testing
@@ -100,6 +100,17 @@ def test_filter_events_by_date_range():
         assert starts_at >= test_start
         assert starts_at < "2026-08-26"
 
+def test_filter_events_by_user_age():
+    test_age = 18
+    response = client.get(f"/events?user_age={test_age}")
+
+    assert response.status_code == 200
+    events = response.json()["data"]
+
+    for event in events:
+        age_limit = event["age_limit"]
+        assert age_limit is None or age_limit <= test_age
+
 def test_event_crud_lifecycle():
     app.dependency_overrides[get_current_user] = override_get_current_user
 
@@ -144,8 +155,49 @@ def test_event_crud_lifecycle():
     finally:
         app.dependency_overrides.clear()
 
-def test_get_users_search():
-    """Test that we can search for a user publicly by name."""
+def test_update_event_unauthorized_or_not_found():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    try:
+        random_event_id = str(uuid.uuid4())
+
+        response = client.patch(f"/events/{random_event_id}", json={"title": "Hacked Event!"})
+
+        assert response.status_code == 403
+        assert "Not authorized" in response.json()["detail"]
+
+    finally:
+        app.dependency_overrides.clear()
+
+def test_update_event_no_data():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    try:
+        random_event_id = str(uuid.uuid4())
+
+        response = client.patch(f"/events/{random_event_id}", json={})
+
+        assert response.status_code == 400
+        assert "No fields provided" in response.json()["detail"]
+
+    finally:
+        app.dependency_overrides.clear()
+
+def test_delete_event_unauthorized_or_not_found():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    try:
+        random_event_id = str(uuid.uuid4())
+
+        response = client.delete(f"/events/{random_event_id}")
+
+        assert response.status_code == 403
+        assert "Not authorized" in response.json()["detail"]
+
+    finally:
+        app.dependency_overrides.clear()
+
+def test_get_users_by_name():
     unique_name = f"TestBot_{mock_test_user.id[:5]}"
 
     try:
@@ -155,13 +207,22 @@ def test_get_users_search():
         assert response.status_code == 200
         data = response.json()["data"]
 
-        # assert db found at least 1 person matching our search
+        # assert db found at least 1 person matching our search, I should be in the table
         assert len(data) >= 1
 
     finally:
         pass
 
-def test_get_registrations_protected():
+def test_get_users_by_id():
+    response = client.get(f"/users?id={mock_test_user.id}")
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+
+    assert len(data) == 1
+    assert data[0]["id"] == mock_test_user.id
+
+def test_get_registrations_by_event_id():
     app.dependency_overrides[get_current_user] = override_get_current_user
 
     fake_event_id = str(uuid.uuid4())
@@ -196,3 +257,38 @@ def test_get_registrations_protected():
         supabase.table("events").delete().eq("id", fake_event_id).execute()
 
         app.dependency_overrides.clear()
+
+def test_get_registrations_by_user_id():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    try:
+        response = client.get(f"/registrations?user_id={mock_test_user.id}")
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+
+        assert isinstance(data, list)
+    finally:
+        app.dependency_overrides.clear()
+
+def test_get_my_profile():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    try:
+        response = client.get("/users/me")
+
+        assert response.status_code == 200
+        json_data = response.json()
+
+        assert "Welcome to your private data!" in json_data["message"]
+        assert json_data["user_id"] == mock_test_user.id
+        assert "profile" in json_data
+    finally:
+        app.dependency_overrides.clear()
+
+def test_unauthenticated_access_blocked():
+    app.dependency_overrides.clear()
+
+    response = client.get("/users/me") # request needs user to be signed in
+
+    assert response.status_code in [401, 403]
