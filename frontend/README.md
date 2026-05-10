@@ -11,12 +11,6 @@
 ## Running the App
 Once synced, select an Emulator (or a physical device) from the top device dropdown and click the green **Run (Play)** button. New devices may be added by selecting the **Device Manager** on the right sidebar. 
 
-To ensure the frontend connects to the backend, add the Supabase URL and Supabase API Key to local.properties as follows:
-```python
-SUPABASE_URL=url
-SUPABASE_KEY=key
-```
-
 *Note: The app expects the FastAPI backend to be running locally. By default, the Android emulator routes `http://10.0.2.2:8000` to your computer's `localhost:8000`.*
 
 ## Architecture Overview
