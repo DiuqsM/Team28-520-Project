@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,6 +42,9 @@ fun SignUpScreen(
     viewModel: SignUpViewModel = viewModel(),
 ) {
     val signUpState by viewModel.signUpState.collectAsState()
+
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -53,10 +59,13 @@ fun SignUpScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp),
+            .padding(horizontal = 32.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        Spacer(modifier = Modifier.height(48.dp))
+
         Text(
             text = "HappnIn",
             style = MaterialTheme.typography.displayMedium,
@@ -71,6 +80,24 @@ fun SignUpScreen(
         )
 
         Spacer(modifier = Modifier.height(48.dp))
+
+        OutlinedTextField(
+            value = firstName,
+            onValueChange = { firstName = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("First Name") },
+            singleLine = true,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = lastName,
+            onValueChange = { lastName = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Last Name") },
+            singleLine = true,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = username,
@@ -110,17 +137,29 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(28.dp))
 
         Button(
-            onClick = { viewModel.register(username, email, password) },
+            onClick = { viewModel.register(firstName, lastName, username, email, password) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
             colors = ButtonDefaults.buttonColors(containerColor = HappnInPurple),
+            // Disable the button while loading
+            enabled = signUpState !is SignUpState.Loading
         ) {
-            Text(
-                text = "Register",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
+            if (signUpState is SignUpState.Loading) {
+                // Show a tiny white spinner
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(end = 8.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+                Text("Registering...")
+            } else {
+                Text(
+                    text = "Register",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -133,6 +172,8 @@ fun SignUpScreen(
                 textAlign = TextAlign.Center,
             )
         }
+
+        Spacer(modifier = Modifier.height(48.dp)) // Added bottom padding for scroll space
     }
 }
 
