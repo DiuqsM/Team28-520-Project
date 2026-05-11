@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -42,12 +44,12 @@ import com.example.happnin.ui.theme.HappnInTheme
 
 @Composable
 fun EventsScreen(
-    events: List<Event>,
+    uiState: EventsUiState,
     modifier: Modifier = Modifier,
     onEventClick: (Event) -> Unit = {},
-    // Registration flow — wired from RegistrationViewModel in MainActivity
     registeredEventIds: Set<String> = emptySet(),
     onRegisterClick: (Event) -> Unit = {},
+    onRetry: () -> Unit = {},
 ) {
     var isSearchOpen by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -95,33 +97,59 @@ fun EventsScreen(
             )
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            if (events.isEmpty()) {
-                item {
-                    Text(
-                        text = "No events nearby.",
-                        modifier = Modifier.padding(vertical = 24.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+        when (uiState) {
+            is EventsUiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-            } else {
-                items(
-                    items = events,
-                    key = { event -> event.id },
-                ) { event ->
-                    EventCard(
-                        event = event,
-                        isRegistered = registeredEventIds.contains(event.id),
-                        onSeeMoreClick = { onEventClick(event) },
-                        onRegisterClick = { onRegisterClick(event) },
+            }
+            is EventsUiState.Error -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = uiState.message,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error,
                     )
+                    Button(onClick = onRetry) {
+                        Text("Retry")
+                    }
+                }
+            }
+            is EventsUiState.Success -> {
+                val events = uiState.events
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentPadding = PaddingValues(bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    if (events.isEmpty()) {
+                        item {
+                            Text(
+                                text = "No events nearby.",
+                                modifier = Modifier.padding(vertical = 24.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    } else {
+                        items(
+                            items = events,
+                            key = { event -> event.id },
+                        ) { event ->
+                            EventCard(
+                                event = event,
+                                isRegistered = registeredEventIds.contains(event.id),
+                                onSeeMoreClick = { onEventClick(event) },
+                                onRegisterClick = { onRegisterClick(event) },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -363,6 +391,6 @@ private fun LayersIcon(
 @Composable
 private fun EventsScreenPreview() {
     HappnInTheme {
-        EventsScreen(events = FakeEventRepository.events)
+        EventsScreen(uiState = EventsUiState.Success(FakeEventRepository.events))
     }
 }

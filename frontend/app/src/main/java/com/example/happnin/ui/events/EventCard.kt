@@ -36,8 +36,6 @@ import com.example.happnin.ui.registration.RegistrationButton
 import com.example.happnin.ui.theme.HappnInDark
 import com.example.happnin.ui.theme.HappnInPurple
 import com.example.happnin.ui.theme.HappnInTheme
-import kotlinx.datetime.LocalDateTime
-
 @Composable
 fun EventCard(
     event: Event,
@@ -278,25 +276,6 @@ private fun MapPinIcon(
     }
 }
 
-private fun Event.toDateRangeLabel(): String {
-    return "${startsAt.toDateLabel()}, ${startsAt.toTimeLabel()}-${endsAt.toTimeLabel()}"
-}
-
-private fun LocalDateTime.toDateLabel(): String {
-    val month = month.name.lowercase().replaceFirstChar { it.uppercase() }
-    return "$month $dayOfMonth"
-}
-
-private fun LocalDateTime.toTimeLabel(): String {
-    val suffix = if (hour >= 12) "pm" else "am"
-    val hour12 = when {
-        hour == 0 -> 12
-        hour > 12 -> hour - 12
-        else -> hour
-    }
-    val minutePadded = minute.toString().padStart(2, '0')
-    return "$hour12:$minutePadded$suffix"
-}
 
 @Preview(showBackground = true)
 @Composable

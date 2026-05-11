@@ -48,6 +48,7 @@ import kotlinx.datetime.LocalDateTime
 @Composable
 fun MyEventsScreen(
     registrationViewModel: RegistrationViewModel,
+    events: List<Event> = FakeEventRepository.events,
     modifier: Modifier = Modifier,
     onSeeMoreClick: (Event) -> Unit = {},
     onChatClick: (Event) -> Unit = {},
@@ -55,8 +56,8 @@ fun MyEventsScreen(
     val registeredIds by registrationViewModel.registeredEventIds.collectAsState()
 
     // Derive the list of events the user has registered for
-    val myEvents = remember(registeredIds) {
-        FakeEventRepository.events.filter { it.id in registeredIds }
+    val myEvents = remember(events, registeredIds) {
+        events.filter { it.id in registeredIds }
     }
 
     Column(

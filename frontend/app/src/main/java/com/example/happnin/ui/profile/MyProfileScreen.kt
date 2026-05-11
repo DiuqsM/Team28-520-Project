@@ -54,6 +54,7 @@ import kotlinx.datetime.LocalDateTime
 @Composable
 fun MyProfileScreen(
     registrationViewModel: RegistrationViewModel,
+    events: List<Event> = FakeEventRepository.events,
     modifier: Modifier = Modifier,
     profileViewModel: MyProfileViewModel = viewModel(),
     onCreateEventClick: () -> Unit = {},  // TODO: Ava - wire Create Event screen
@@ -66,8 +67,8 @@ fun MyProfileScreen(
     val registeredIds by registrationViewModel.registeredEventIds.collectAsState()
     val user = profileState.user
 
-    val myEvents = remember(registeredIds) {
-        FakeEventRepository.events.filter { it.id in registeredIds }
+    val myEvents = remember(events, registeredIds) {
+        events.filter { it.id in registeredIds }
     }
 
     LazyColumn(
