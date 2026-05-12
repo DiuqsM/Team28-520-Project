@@ -78,6 +78,16 @@ class RegistrationViewModelTest {
         assertFalse(viewModel.isRegistered("event-001"))
     }
 
+    @Test
+    fun clearRegistrations_removesRegisteredEvents() = runTest {
+        viewModel.register("event-001")
+        advanceUntilIdle()
+
+        viewModel.clearRegistrations()
+
+        assertTrue(viewModel.registeredEventIds.value.isEmpty())
+    }
+
     private class FakeRegistrationRepository : RegistrationRepository {
         override suspend fun getRegisteredEventIds(): Set<String> = emptySet()
 

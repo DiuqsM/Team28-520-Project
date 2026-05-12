@@ -1,11 +1,15 @@
 package com.example.happnin.ui.profile
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.happnin.data.FakeEventRepository
+import com.example.happnin.data.User
 import com.example.happnin.ui.registration.RegistrationViewModel
 import com.example.happnin.ui.theme.HappnInTheme
 import org.junit.Assert.assertTrue
@@ -19,12 +23,24 @@ class MyProfileScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private val profileUser = User(
+        id = "user-001",
+        email = "alex@umass.edu",
+        name = "Alex Rivera",
+        college = "UMass Amherst",
+        role = "student",
+    )
+
     @Test
     fun myProfileScreen_showsMyProfileHeader() {
         val vm = RegistrationViewModel()
         composeTestRule.setContent {
             HappnInTheme {
-                MyProfileScreen(registrationViewModel = vm, events = emptyList())
+                MyProfileScreen(
+                    registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
+                    events = emptyList(),
+                )
             }
         }
         composeTestRule.onNodeWithText("My Profile").assertIsDisplayed()
@@ -35,10 +51,13 @@ class MyProfileScreenTest {
         val vm = RegistrationViewModel()
         composeTestRule.setContent {
             HappnInTheme {
-                MyProfileScreen(registrationViewModel = vm, events = emptyList())
+                MyProfileScreen(
+                    registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
+                    events = emptyList(),
+                )
             }
         }
-        // MockData.currentUser.name = "Alex Rivera"
         composeTestRule.onNodeWithText("Alex Rivera").assertIsDisplayed()
     }
 
@@ -47,7 +66,11 @@ class MyProfileScreenTest {
         val vm = RegistrationViewModel()
         composeTestRule.setContent {
             HappnInTheme {
-                MyProfileScreen(registrationViewModel = vm, events = emptyList())
+                MyProfileScreen(
+                    registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
+                    events = emptyList(),
+                )
             }
         }
         composeTestRule.onNodeWithText("UMass Amherst").assertIsDisplayed()
@@ -58,7 +81,11 @@ class MyProfileScreenTest {
         val vm = RegistrationViewModel()
         composeTestRule.setContent {
             HappnInTheme {
-                MyProfileScreen(registrationViewModel = vm, events = emptyList())
+                MyProfileScreen(
+                    registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
+                    events = emptyList(),
+                )
             }
         }
         composeTestRule.onNodeWithText("Student").assertIsDisplayed()
@@ -69,7 +96,11 @@ class MyProfileScreenTest {
         val vm = RegistrationViewModel()
         composeTestRule.setContent {
             HappnInTheme {
-                MyProfileScreen(registrationViewModel = vm, events = emptyList())
+                MyProfileScreen(
+                    registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
+                    events = emptyList(),
+                )
             }
         }
         composeTestRule.onNodeWithText("Create Event").assertIsDisplayed()
@@ -80,7 +111,11 @@ class MyProfileScreenTest {
         val vm = RegistrationViewModel()
         composeTestRule.setContent {
             HappnInTheme {
-                MyProfileScreen(registrationViewModel = vm, events = emptyList())
+                MyProfileScreen(
+                    registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
+                    events = emptyList(),
+                )
             }
         }
         composeTestRule.onNodeWithText("Add Friends").assertIsDisplayed()
@@ -91,7 +126,11 @@ class MyProfileScreenTest {
         val vm = RegistrationViewModel()
         composeTestRule.setContent {
             HappnInTheme {
-                MyProfileScreen(registrationViewModel = vm, events = emptyList())
+                MyProfileScreen(
+                    registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
+                    events = emptyList(),
+                )
             }
         }
         composeTestRule.onNodeWithText("Log Out").assertIsDisplayed()
@@ -104,6 +143,7 @@ class MyProfileScreenTest {
             HappnInTheme {
                 MyProfileScreen(
                     registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
                     events = FakeEventRepository.events,
                 )
             }
@@ -118,6 +158,7 @@ class MyProfileScreenTest {
             HappnInTheme {
                 MyProfileScreen(
                     registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
                     events = FakeEventRepository.events,
                 )
             }
@@ -133,6 +174,7 @@ class MyProfileScreenTest {
             HappnInTheme {
                 MyProfileScreen(
                     registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
                     events = emptyList(),
                     onLogOut = { loggedOut = true },
                 )
@@ -147,9 +189,45 @@ class MyProfileScreenTest {
         val vm = RegistrationViewModel()
         composeTestRule.setContent {
             HappnInTheme {
-                MyProfileScreen(registrationViewModel = vm, events = emptyList())
+                MyProfileScreen(
+                    registrationViewModel = vm,
+                    profileViewModel = rememberProfileViewModel(profileUser),
+                    events = emptyList(),
+                )
             }
         }
         composeTestRule.onNodeWithText("Registered Events").assertIsDisplayed()
+    }
+
+    @Test
+    fun myProfileScreen_withoutUser_showsUnavailableState() {
+        val vm = RegistrationViewModel()
+        composeTestRule.setContent {
+            HappnInTheme {
+                MyProfileScreen(
+                    registrationViewModel = vm,
+                    profileViewModel = remember { MyProfileViewModel(FakeProfileRepository()) },
+                    events = emptyList(),
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Profile unavailable").assertIsDisplayed()
+    }
+
+    @Composable
+    private fun rememberProfileViewModel(user: User): MyProfileViewModel {
+        val viewModel = remember(user) {
+            MyProfileViewModel(FakeProfileRepository(user))
+        }
+        LaunchedEffect(viewModel) {
+            viewModel.loadCurrentUser()
+        }
+        return viewModel
+    }
+
+    private class FakeProfileRepository(
+        private val user: User? = null,
+    ) : ProfileRepository {
+        override suspend fun getCurrentUser(): User = requireNotNull(user)
     }
 }

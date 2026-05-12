@@ -27,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.happnin.data.SupabaseNetwork
 import com.example.happnin.ui.auth.LoginScreen
 import com.example.happnin.ui.events.EventDetailScreen
 import com.example.happnin.ui.auth.SignUpScreen
@@ -46,9 +48,12 @@ import com.example.happnin.ui.events.EventsUiState
 import com.example.happnin.ui.events.EventsViewModel
 import com.example.happnin.ui.myevents.MyEventsScreen
 import com.example.happnin.ui.profile.MyProfileScreen
+import com.example.happnin.ui.profile.MyProfileViewModel
 import com.example.happnin.ui.registration.RegistrationViewModel
 import com.example.happnin.ui.theme.HappnInPurple
 import com.example.happnin.ui.theme.HappnInTheme
+import io.github.jan.supabase.gotrue.auth
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,13 +77,20 @@ fun HappnInApp() {
 
     // ── Shared registration state ─────────────────────────────────────────────────
     val registrationViewModel: RegistrationViewModel = viewModel()
+    val profileViewModel: MyProfileViewModel = viewModel()
+    val profileState by profileViewModel.uiState.collectAsState()
     val registeredEventIds by registrationViewModel.registeredEventIds.collectAsState()
     val registrationError by registrationViewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn) {
+            profileViewModel.loadCurrentUser()
             registrationViewModel.refreshRegistrations()
+        } else {
+            profileViewModel.reset()
+            registrationViewModel.clearRegistrations()
         }
     }
 
@@ -86,6 +98,12 @@ fun HappnInApp() {
         val message = registrationError ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(message)
         registrationViewModel.clearError()
+    }
+
+    LaunchedEffect(profileState.errorMessage) {
+        val message = profileState.errorMessage ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(message)
+        profileViewModel.clearError()
     }
 
     val eventsViewModel: EventsViewModel = viewModel()
@@ -160,11 +178,24 @@ fun HappnInApp() {
                 )
                 AppDestinations.PROFILE -> MyProfileScreen(
                     registrationViewModel = registrationViewModel,
+                    profileViewModel = profileViewModel,
                     events = loadedEvents,
                     modifier = Modifier.padding(innerPadding),
                     onLogOut = {
-                        isLoggedIn = false
-                        authScreen = AuthScreen.LOGIN
+                        profileViewModel.reset()
+                        registrationViewModel.clearRegistrations()
+                        currentDestination = AppDestinations.HOME
+                        selectedEventId = null
+                        coroutineScope.launch {
+                            val signOutResult = runCatching { SupabaseNetwork.client.auth.signOut() }
+                            isLoggedIn = false
+                            authScreen = AuthScreen.LOGIN
+                            signOutResult.exceptionOrNull()?.let {
+                                snackbarHostState.showSnackbar(
+                                    it.localizedMessage ?: "Could not complete sign out.",
+                                )
+                            }
+                        }
                     },
                 )
             }

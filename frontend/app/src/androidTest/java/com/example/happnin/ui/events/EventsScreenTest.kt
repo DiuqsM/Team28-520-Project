@@ -1,6 +1,7 @@
 package com.example.happnin.ui.events
 
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -102,6 +103,19 @@ class EventsScreenTest {
             HappnInTheme { EventsScreen(uiState = EventsUiState.Success(emptyList())) }
         }
         composeTestRule.onNodeWithText("No events nearby.").assertIsDisplayed()
+    }
+
+    @Test
+    fun eventsScreen_registeredEvents_areHiddenFromFeed() {
+        composeTestRule.setContent {
+            HappnInTheme {
+                EventsScreen(
+                    uiState = EventsUiState.Success(FakeEventRepository.events),
+                    registeredEventIds = setOf("event-001"),
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Five Colleges Open Mic Night").assertDoesNotExist()
     }
 
     // ── Interaction tests ────────────────────────────────────────────────────────

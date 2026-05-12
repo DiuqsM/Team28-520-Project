@@ -17,6 +17,9 @@ class RegistrationViewModel(
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     fun refreshRegistrations() {
+        _registeredEventIds.value = emptySet()
+        _errorMessage.value = null
+
         viewModelScope.launch {
             runCatching { repository.getRegisteredEventIds() }
                 .onSuccess { _registeredEventIds.value = it }
@@ -60,6 +63,11 @@ class RegistrationViewModel(
         _registeredEventIds.value.contains(eventId)
 
     fun clearError() {
+        _errorMessage.value = null
+    }
+
+    fun clearRegistrations() {
+        _registeredEventIds.value = emptySet()
         _errorMessage.value = null
     }
 }

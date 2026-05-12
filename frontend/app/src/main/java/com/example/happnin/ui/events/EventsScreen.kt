@@ -121,7 +121,7 @@ fun EventsScreen(
                 }
             }
             is EventsUiState.Success -> {
-                val events = uiState.events
+                val events = uiState.events.filterNot { it.id in registeredEventIds }
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()

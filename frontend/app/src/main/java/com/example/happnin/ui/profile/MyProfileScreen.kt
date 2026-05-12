@@ -66,6 +66,9 @@ fun MyProfileScreen(
     val profileState by profileViewModel.uiState.collectAsState()
     val registeredIds by registrationViewModel.registeredEventIds.collectAsState()
     val user = profileState.user
+    val profileName = user?.name
+        ?: if (profileState.isLoading) "Loading profile..." else "Profile unavailable"
+    val profileInitial = user?.name?.firstOrNull()?.uppercase() ?: "?"
 
     val myEvents = remember(events, registeredIds) {
         events.filter { it.id in registeredIds }
@@ -114,16 +117,21 @@ fun MyProfileScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = user.name.firstOrNull()?.uppercase() ?: "?",
+                        text = profileInitial,
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(user.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                Text(user.college, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(user.role.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(profileName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                user?.email?.takeIf { it.isNotBlank() }?.let { email ->
+                    Text(email, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                user?.let {
+                    Text(it.college, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(it.role.replaceFirstChar { role -> role.uppercase() }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
 
