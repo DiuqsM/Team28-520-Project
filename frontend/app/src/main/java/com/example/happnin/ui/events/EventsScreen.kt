@@ -35,6 +35,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -173,7 +174,7 @@ private fun ExploreHeader(
         )
         IconButton(
             onClick = onSearchClick,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(32.dp).testTag("SearchButton"),
         ) {
             SearchIcon(
                 modifier = Modifier.size(20.dp),
@@ -221,7 +222,7 @@ private fun EventsLabel(
         ) {
             IconButton(
                 onClick = onFilterClick,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(32.dp).testTag("FilterButton"),
             ) {
                 FilterIcon(
                     modifier = Modifier.size(20.dp),
@@ -230,7 +231,7 @@ private fun EventsLabel(
             }
             IconButton(
                 onClick = onSortClick,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(32.dp).testTag("SortButton"),
             ) {
                 LayersIcon(
                     modifier = Modifier.size(20.dp),

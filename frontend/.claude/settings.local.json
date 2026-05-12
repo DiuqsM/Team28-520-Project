@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(cmd /c \"dir C:\\\\Users\\\\rihui\\\\.gradle\")",
+      "PowerShell(cmd /c \"dir C:\\\\Users\\\\rihui\\\\.gradle\\\\wrapper\\\\dists\")",
+      "PowerShell(cmd /c \"dir C:\\\\Users\\\\rihui\\\\.gradle\\\\wrapper\\\\dists\\\\gradle-9.4.1-bin /s /b\" 2>&1 | Select-Object -First 20)",
+      "PowerShell(cmd /c \"dir C:\\\\Users\\\\rihui\\\\.gradle\\\\jdks\")",
+      "PowerShell(cmd /c \"dir C:\\\\Users\\\\rihui\\\\StudioProjects\\\\Team28-520-Project\\\\frontend\\\\app\\\\build\\\\reports\\\\tests\\\\testDebugUnitTest /b\")"
+    ]
+  }
+}
