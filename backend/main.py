@@ -221,6 +221,27 @@ def create_registration(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.delete("/registrations/by-event/{event_id}", status_code=204)
+def delete_registration_by_event(
+    event_id: str,
+    user = Depends(get_current_user)
+):
+    try:
+        response = supabase.table("registration").delete()\
+            .eq("event_id", event_id)\
+            .eq("user_id", user.id)\
+            .execute()
+
+        if not response.data:
+            raise HTTPException(status_code=403, detail="Not authorized to cancel this registration, or it doesn't exist.")
+
+        return None
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.delete("/registrations/{registration_id}", status_code=204)
 def delete_registration(
     registration_id: str,

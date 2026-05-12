@@ -31,7 +31,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.happnin.ui.theme.HappnInPurple
 import com.example.happnin.ui.theme.HappnInTheme
 
-// Teammate hook: replace onLoginSuccess stub in LoginViewModel.login() with real Supabase auth.
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -90,7 +89,6 @@ fun LoginScreen(
             visualTransformation = PasswordVisualTransformation(),
         )
 
-        // TODO: show LoginState.Error message here when real auth returns an error
         if (loginState is LoginState.Error) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(

@@ -1,9 +1,11 @@
 package com.example.happnin.ui.auth
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 sealed class LoginState {
     object Idle : LoginState()
@@ -12,22 +14,29 @@ sealed class LoginState {
     data class Error(val message: String) : LoginState()  // TODO: surface real error messages
 }
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val authRepository: AuthRepository = SupabaseAuthRepository(),
+) : ViewModel() {
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState.asStateFlow()
 
     fun login(email: String, password: String) {
-        // TODO: Replace this block with real Supabase auth
-        // Example:
-        //   val result = supabaseClient.auth.signInWith(Email) {
-        //       this.email = email
-        //       this.password = password
-        //   }
-        //   On success: _loginState.value = LoginState.Success
-        //   On failure: _loginState.value = LoginState.Error(result.errorMessage)
+        if (email.isBlank() || password.isBlank()) {
+            _loginState.value = LoginState.Error("Email and password are required.")
+            return
+        }
 
-        // For now, just navigate directly:
-        _loginState.value = LoginState.Success
+        _loginState.value = LoginState.Loading
+
+        viewModelScope.launch {
+            runCatching { authRepository.login(email, password) }
+                .onSuccess { _loginState.value = LoginState.Success }
+                .onFailure {
+                    _loginState.value = LoginState.Error(
+                        it.localizedMessage ?: "Could not sign in."
+                    )
+                }
+        }
     }
 
     fun resetState() {

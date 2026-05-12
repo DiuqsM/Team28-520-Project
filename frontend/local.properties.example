@@ -1,0 +1,9 @@
+## Copy this file to local.properties and fill in values for your machine.
+## Do not commit local.properties.
+
+## Android SDK path. Android Studio usually creates this automatically.
+sdk.dir=/Users/YOUR_USERNAME/Library/Android/sdk
+
+## Supabase project settings.
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_KEY=YOUR_SUPABASE_ANON_PUBLIC_KEY

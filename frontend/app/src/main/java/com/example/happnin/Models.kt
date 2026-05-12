@@ -83,6 +83,16 @@ data class RegistrationResponse(
     val data: List<Registration>
 )
 
+data class RegistrationCreateRequest(
+    @SerializedName("event_id")
+    val eventId: String
+)
+
+data class RegistrationCreateResponse(
+    val message: String,
+    val data: Registration
+)
+
 fun Event.toDomain(): DomainEvent {
     val parsedStartsAt = parseEventDateTime(startsAt, "starts_at")
     val parsedEndsAt = endsAt?.let { parseEventDateTime(it, "ends_at") } ?: parsedStartsAt

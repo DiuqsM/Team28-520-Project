@@ -50,9 +50,16 @@ fun SignUpScreen(
     var password by remember { mutableStateOf("") }
 
     LaunchedEffect(signUpState) {
-        if (signUpState is SignUpState.Success) {
-            onSignUpSuccess()
-            viewModel.resetState()
+        when (signUpState) {
+            is SignUpState.Success -> {
+                onSignUpSuccess()
+                viewModel.resetState()
+            }
+            is SignUpState.AccountCreatedLoginRequired -> {
+                onLoginClick()
+                viewModel.resetState()
+            }
+            else -> Unit
         }
     }
 
@@ -129,6 +136,16 @@ fun SignUpScreen(
             Text(
                 text = (signUpState as SignUpState.Error).message,
                 color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        if (signUpState is SignUpState.AccountCreatedLoginRequired) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = (signUpState as SignUpState.AccountCreatedLoginRequired).message,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth(),
             )

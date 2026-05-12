@@ -75,4 +75,5 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("io.github.jan-tennert.supabase:gotrue-kt:2.1.3")
     implementation("io.ktor:ktor-client-android:2.3.8")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 }

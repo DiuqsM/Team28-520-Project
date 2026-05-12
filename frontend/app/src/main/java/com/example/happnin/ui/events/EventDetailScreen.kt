@@ -41,8 +41,10 @@ fun EventDetailScreen(
     isRegistered: Boolean = false,
     onBack: () -> Unit = {},
     onRegisterClick: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text(text = event.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },

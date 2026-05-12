@@ -1,7 +1,13 @@
 package com.example.happnin
 import retrofit2.Retrofit
+import retrofit2.Response
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -23,10 +29,23 @@ interface ApiService {
 
     @GET("registrations")
     suspend fun getRegistrations(
+        @Header("Authorization") authorization: String,
         @Query("id") id: String? = null,
         @Query("user_id") userId: String? = null,
         @Query("event_id") eventId: String? = null
     ): RegistrationResponse
+
+    @POST("registrations")
+    suspend fun createRegistration(
+        @Header("Authorization") authorization: String,
+        @Body registration: RegistrationCreateRequest
+    ): RegistrationCreateResponse
+
+    @DELETE("registrations/by-event/{event_id}")
+    suspend fun deleteRegistrationByEvent(
+        @Header("Authorization") authorization: String,
+        @Path("event_id") eventId: String
+    ): Response<Unit>
 }
 
 object ApiClient {

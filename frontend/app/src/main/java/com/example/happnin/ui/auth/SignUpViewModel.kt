@@ -16,6 +16,7 @@ sealed class SignUpState {
     object Idle : SignUpState()
     object Loading : SignUpState()
     object Success : SignUpState()
+    data class AccountCreatedLoginRequired(val message: String) : SignUpState()
     data class Error(val message: String) : SignUpState()
 }
 
@@ -32,7 +33,7 @@ class SignUpViewModel : ViewModel() {
         _signUpState.value = SignUpState.Loading
 
         viewModelScope.launch {
-            try {
+            runCatching {
                 SupabaseNetwork.client.auth.signUpWith(Email) {
                     this.email = email
                     this.password = password
@@ -43,12 +44,23 @@ class SignUpViewModel : ViewModel() {
                         put("username", username)
                     }
                 }
-
-                _signUpState.value = SignUpState.Success
-
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 val errorMessage = e.localizedMessage ?: "An unknown error occurred"
                 _signUpState.value = SignUpState.Error(errorMessage)
+                return@launch
+            }
+
+            runCatching {
+                SupabaseNetwork.client.auth.signInWith(Email) {
+                    this.email = email
+                    this.password = password
+                }
+            }.onSuccess {
+                _signUpState.value = SignUpState.Success
+            }.onFailure {
+                _signUpState.value = SignUpState.AccountCreatedLoginRequired(
+                    "Account created. Please log in to continue."
+                )
             }
         }
     }
