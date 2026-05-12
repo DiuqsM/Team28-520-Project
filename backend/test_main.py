@@ -3,6 +3,7 @@ from main import app
 from dependencies import get_current_user
 import uuid
 from database import supabase
+from unittest.mock import patch
 
 # create a fake user object that looks like what Supabase returns
 class MockUser:
@@ -366,3 +367,56 @@ def test_unauthenticated_access_blocked():
     response = client.get("/users/me") # request needs user to be signed in
 
     assert response.status_code in [401, 403]
+
+def test_get_events_500_crash():
+    with patch("main.supabase.table") as mock_table:
+        mock_table.side_effect = Exception("Simulated Database Explosion!")
+
+        response = client.get("/events")
+
+        assert response.status_code == 500
+        assert "Simulated Database Explosion" in response.json()["detail"]
+
+
+def test_create_event_500_crash():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    try:
+        with patch("main.supabase.table") as mock_table:
+            mock_table.side_effect = Exception("Simulated Insert Crash!")
+
+            response = client.post("/events", json={
+                "title": "Crash Event",
+                "location": "Nowhere",
+                "starts_at": "2026-01-01T00:00:00",
+                "ends_at": "2026-01-02T00:00:00"
+            })
+
+            assert response.status_code == 500
+    finally:
+        app.dependency_overrides.clear()
+
+def test_get_my_profile_not_found():
+    class GhostUser:
+        id = str(uuid.uuid4())
+
+    app.dependency_overrides[get_current_user] = lambda: GhostUser()
+
+    try:
+        response = client.get("/users/me")
+
+        assert response.status_code == 404
+        assert "User profile not found" in response.json()["detail"]
+    finally:
+        app.dependency_overrides.clear()
+
+def test_get_registration_by_id():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    try:
+        random_reg_id = str(uuid.uuid4())
+        response = client.get(f"/registrations?id={random_reg_id}")
+
+        assert response.status_code == 200
+    finally:
+        app.dependency_overrides.clear()
