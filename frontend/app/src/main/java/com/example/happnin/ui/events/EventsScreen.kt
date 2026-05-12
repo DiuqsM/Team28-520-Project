@@ -42,6 +42,16 @@ import androidx.compose.ui.unit.dp
 import com.example.happnin.data.Event
 import com.example.happnin.data.FakeEventRepository
 import com.example.happnin.ui.theme.HappnInTheme
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
+
+private val COLLEGES = listOf("UMass Amherst", "Amherst College", "Smith College", "Mount Holyoke", "Hampshire College")
+private val DATE_OPTIONS = listOf("Today", "This week", "Weekend", "Upcoming")
 
 @Composable
 fun EventsScreen(
@@ -57,6 +67,9 @@ fun EventsScreen(
     var isFilterOpen by rememberSaveable { mutableStateOf(false) }
     var isSortOpen by rememberSaveable { mutableStateOf(false) }
     var expandedFilter by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedCollege by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedDate by rememberSaveable { mutableStateOf<String?>(null) }
+    var freeOnly by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -86,8 +99,21 @@ fun EventsScreen(
         if (isFilterOpen) {
             FilterPanel(
                 expandedFilter = expandedFilter,
-                onFilterClick = { filter ->
-                    expandedFilter = if (expandedFilter == filter) null else filter
+                selectedCollege = selectedCollege,
+                selectedDate = selectedDate,
+                freeOnly = freeOnly,
+                onTopFilterClick = { filter ->
+                    if (filter == "Free events") {
+                        freeOnly = !freeOnly
+                    } else {
+                        expandedFilter = if (expandedFilter == filter) null else filter
+                    }
+                },
+                onCollegeSelect = { college ->
+                    selectedCollege = if (selectedCollege == college) null else college
+                },
+                onDateSelect = { date ->
+                    selectedDate = if (selectedDate == date) null else date
                 },
             )
         }
@@ -121,7 +147,48 @@ fun EventsScreen(
                 }
             }
             is EventsUiState.Success -> {
-                val events = uiState.events.filterNot { it.id in registeredEventIds }
+                val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                val filteredEvents = uiState.events
+                    .filterNot { it.id in registeredEventIds }
+                    .filter { event ->
+                        searchQuery.isBlank() ||
+                            event.title.contains(searchQuery, ignoreCase = true) ||
+                            event.description.contains(searchQuery, ignoreCase = true) ||
+                            event.location.contains(searchQuery, ignoreCase = true)
+                    }
+                    .filter { event ->
+                        selectedCollege == null || event.college == selectedCollege
+                    }
+                    .filter { event ->
+                        !freeOnly || event.price == 0.0
+                    }
+                    .filter { event ->
+                        val eventDate = event.startsAt.date
+                        when (selectedDate) {
+                            "Today" -> eventDate == today
+                            "This week" -> {
+                                val weekStart = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                                val weekEnd = weekStart.plus(6, DateTimeUnit.DAY)
+                                eventDate in weekStart..weekEnd
+                            }
+                            "Weekend" -> {
+                                val dow = today.dayOfWeek
+                                val (weekendSat, weekendSun) = when (dow) {
+                                    DayOfWeek.SATURDAY -> today to today.plus(1, DateTimeUnit.DAY)
+                                    DayOfWeek.SUNDAY -> today.minus(1, DateTimeUnit.DAY) to today
+                                    else -> {
+                                        val daysUntilSat = DayOfWeek.SATURDAY.ordinal - dow.ordinal
+                                        val sat = today.plus(daysUntilSat, DateTimeUnit.DAY)
+                                        sat to sat.plus(1, DateTimeUnit.DAY)
+                                    }
+                                }
+                                eventDate == weekendSat || eventDate == weekendSun
+                            }
+                            "Upcoming" -> eventDate > today
+                            else -> true
+                        }
+                    }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -129,10 +196,10 @@ fun EventsScreen(
                     contentPadding = PaddingValues(bottom = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    if (events.isEmpty()) {
+                    if (filteredEvents.isEmpty()) {
                         item {
                             Text(
-                                text = "No events nearby.",
+                                text = "No events match your filters.",
                                 modifier = Modifier.padding(vertical = 24.dp),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -140,7 +207,7 @@ fun EventsScreen(
                         }
                     } else {
                         items(
-                            items = events,
+                            items = filteredEvents,
                             key = { event -> event.id },
                         ) { event ->
                             EventCard(
@@ -245,23 +312,38 @@ private fun EventsLabel(
 @Composable
 private fun FilterPanel(
     expandedFilter: String?,
-    onFilterClick: (String) -> Unit,
+    selectedCollege: String?,
+    selectedDate: String?,
+    freeOnly: Boolean,
+    onTopFilterClick: (String) -> Unit,
+    onCollegeSelect: (String) -> Unit,
+    onDateSelect: (String) -> Unit,
 ) {
+    val activeTopItems = buildSet {
+        if (selectedCollege != null) add("College")
+        if (selectedDate != null) add("Date")
+        if (freeOnly) add("Free events")
+    }
+
     OptionPanel(
         title = "Filter",
         items = listOf("College", "Date", "Free events"),
-        onItemClick = onFilterClick,
+        activeItems = activeTopItems,
+        onItemClick = onTopFilterClick,
     )
 
     when (expandedFilter) {
         "College" -> OptionPanel(
             title = "College",
-            items = listOf("UMass Amherst", "Amherst College", "Smith College", "Mount Holyoke", "Hampshire College"),
+            items = COLLEGES,
+            activeItems = setOfNotNull(selectedCollege),
+            onItemClick = onCollegeSelect,
         )
-
         "Date" -> OptionPanel(
             title = "Date",
-            items = listOf("Today", "This week", "Weekend", "Upcoming"),
+            items = DATE_OPTIONS,
+            activeItems = setOfNotNull(selectedDate),
+            onItemClick = onDateSelect,
         )
     }
 }
@@ -270,6 +352,7 @@ private fun FilterPanel(
 private fun OptionPanel(
     title: String,
     items: List<String>,
+    activeItems: Set<String> = emptySet(),
     onItemClick: (String) -> Unit = {},
 ) {
     Column(
@@ -296,11 +379,16 @@ private fun OptionPanel(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             items.forEach { item ->
+                val isActive = item in activeItems
                 Box(
                     modifier = Modifier
                         .border(
                             width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
+                            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                            shape = RoundedCornerShape(8.dp),
+                        )
+                        .background(
+                            color = if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                             shape = RoundedCornerShape(8.dp),
                         )
                         .clickable { onItemClick(item) }
@@ -310,7 +398,7 @@ private fun OptionPanel(
                     Text(
                         text = item,
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }

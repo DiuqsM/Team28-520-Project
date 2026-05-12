@@ -175,6 +175,7 @@ fun HappnInApp() {
                     registrationViewModel = registrationViewModel,
                     events = loadedEvents,
                     modifier = Modifier.padding(innerPadding),
+                    onSeeMoreClick = { event -> selectedEventId = event.id },
                 )
                 AppDestinations.PROFILE -> MyProfileScreen(
                     registrationViewModel = registrationViewModel,

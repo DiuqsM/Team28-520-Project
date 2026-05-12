@@ -113,7 +113,7 @@ fun EventDetailScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             when {
-                isRegistered -> RegistrationButton(isRegistered = true, onRegisterClick = {})
+                isRegistered -> Unit
                 event.status == EventStatus.OPEN -> RegistrationButton(
                     isRegistered = false,
                     onRegisterClick = onRegisterClick,
